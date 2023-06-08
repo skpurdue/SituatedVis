@@ -9,16 +9,6 @@ Promise.all([
   d3.csv('data/NormalSmallStepsDataset.csv')
 ]).then((datasets) => {
   const container = d3.select("#container");
-  
-  const buttonsContainer = container.append("div")
-    .attr("id", "buttons-container");
-  
-  const buttonPause = buttonsContainer.append("button")
-    .on("click", onPauseClick)
-    .text("Pause")
-  const buttonRestart = buttonsContainer.append("button")
-    .on("click", onRestartClick)
-    .text("Restart")
 
   const chartsContainer = container.append("div")
     .attr("id", "charts-container");
@@ -32,6 +22,16 @@ Promise.all([
     charts.push(chart);
   }
   
+  const buttonsContainer = container.append("div")
+    .attr("id", "buttons-container");
+  
+  const buttonPause = buttonsContainer.append("button")
+    .on("click", onPauseClick)
+    .text("Pause")
+  const buttonRestart = buttonsContainer.append("button")
+    .on("click", onRestartClick)
+    .text("Restart")
+
   let isRunning = true;
   let intervalId;
   let step = 1;

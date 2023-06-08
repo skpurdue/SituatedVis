@@ -1,5 +1,5 @@
 function situatedAnimatedChart(data, div, title) {
-  const margin = {top: 40, right: 20, bottom: 40, left: 100};
+  const margin = {top: 40, right: 20, bottom: 40, left: 60};
 
   const visWidth = 700;
   const visHeight = 400;
@@ -80,7 +80,8 @@ function situatedAnimatedChart(data, div, title) {
   chart.update = function (step, duration) {
     x.domain([0.5 + step, 10.5 + step]);
     const t = d3.transition().duration(duration);
-    bars.transition(t).attr("x", d => x(d.index) - barwidth/2);
+    bars.transition(t)
+      .attr("x", d => x(d.index) - barwidth/2);
     xAxisgroup.transition(t).call(xAxis);
   }
 
