@@ -1,36 +1,40 @@
 // Load the datasets and call the functions to make the visualizations
 
 Promise.all([
-  d3.csv('data/NormalSmallStepsDataset.csv'),
-  d3.csv('data/NormalJumpDataset.csv'),
-  d3.csv('data/NormalSmallStepsDataset.csv'),
-  d3.csv('data/NormalSmallStepsDataset.csv'),
-  d3.csv('data/NormalSmallStepsDataset.csv'),
-  d3.csv('data/NormalSmallStepsDataset.csv')
+  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType),
+  d3.csv('data/NormalJumpDataset.csv', d3.autoType),
+  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType),
+  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType),
+  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType),
+  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType)
 ]).then((datasets) => {
+
+  const numCols = 3;
+  const numRows = 2;
+
   const container = d3.select("#container");
 
-  const chartsContainer = container.append("div")
-    .attr("id", "charts-container");
-  
-  const charts = [];
+  const chartsContainer = container.select("#charts-container")
+      .style("grid-template-columns", `repeat(${numCols}, 1fr)`)
+      .style("grid-template-rows", `repeat(${numRows}, 1fr)`)
+
+  let gridWidth = chartsContainer.node().clientWidth;
+  let gridHeight = chartsContainer.node().clientHeight;
+
+  let cellWidth = gridWidth/numCols;
+  let cellHeight = gridHeight/numRows;
+
   const titles = ["Small Steps", "Jump", "Empty", "Nothing", "Filler", "Etc."]
-  for (let i = 0; i < datasets.length; i++) {
-    const div = chartsContainer.append("div");
-    const chart = situatedAnimatedChart(datasets[i], div, titles[i]);
-    chart();
-    charts.push(chart);
-  }
-  
-  const buttonsContainer = container.append("div")
-    .attr("id", "buttons-container");
-  
-  const buttonPause = buttonsContainer.append("button")
-    .on("click", onPauseClick)
-    .text("Pause")
-  const buttonRestart = buttonsContainer.append("button")
-    .on("click", onRestartClick)
-    .text("Restart")
+  const charts = chartsContainer.selectAll("div")
+    .data(d3.zip(datasets, titles))
+    .join("div")
+    .append(([data, title]) => situatedAnimatedChart(data, title, cellWidth, cellHeight))
+    .nodes();
+
+  const buttonPause = container.select("#pause")
+    .on("click", onPauseClick);
+  const buttonRestart = container.select("#restart")
+    .on("click", onRestartClick);
 
   let isRunning = true;
   let intervalId;
@@ -76,5 +80,32 @@ Promise.all([
     clearInterval(intervalId);
   }
   startAnimation();
+
+  const resizeObserver = new ResizeObserver((entries) => {
+    if (!entries) {
+      return;
+    }
+    
+    const entry = entries[0];
+    
+    if (entry.contentBoxSize) {
+      const contentBoxSize = entry.contentBoxSize[0];
+      gridWidth = contentBoxSize.inlineSize;
+      gridHeight = contentBoxSize.blockSize;
+    } else {
+      gridWidth = entry.contentRect.width;
+      gridHeight = entry.contentRect.height;
+    }
+    
+    cellWidth = gridWidth/numCols;
+    cellHeight = gridHeight/numRows;
+
+    for (const chart of charts) {
+      chart.resize(cellWidth, cellHeight);
+    }
+
+  });
+
+  resizeObserver.observe(chartsContainer.node());
 
 });

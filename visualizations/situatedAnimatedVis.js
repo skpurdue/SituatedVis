@@ -1,89 +1,110 @@
-function situatedAnimatedChart(data, div, title) {
-  const margin = {top: 40, right: 20, bottom: 40, left: 60};
+function situatedAnimatedChart(data, title, width = 700, height = 400) {
+  const margin = { top: 40, right: 20, bottom: 40, left: 60 };
 
-  const visWidth = 700;
-  const visHeight = 400;
+  const numbars = 10;
+  const offset = 0.5;
 
-  let x;
-  let xAxis;
-  let xAxisgroup;
-  let bars;
-  let barwidth;
+  const svg = d3.create('svg')
+      .attr('width', width)
+      .attr('height', height);
 
-  function chart() {
-    const svg = div.append('svg')
-        .attr('width', visWidth)
-        .attr('height', visHeight);
+  const clipPath = svg.append("clipPath")
+      .attr("id", "border")
+    .append("rect")
+      .attr("x", margin.left)
+      .attr("y", margin.top)
+      .attr("width", width - margin.left - margin.right)
+      .attr("height", height - margin.top - margin.bottom)
+      .attr("fill", "white");
 
-    svg.append("clipPath")
-        .attr("id", "border")
-      .append("rect")
-        .attr("x", margin.left)
-        .attr("y", margin.top)
-        .attr("width", visWidth - margin.left - margin.right)
-        .attr("height", visHeight - margin.top - margin.bottom)
-        .attr("fill", "white");
-
-    const barsgroup = svg.append("g")
+  const barsgroup = svg.append("g")
       .attr("clip-path", "url(#border)");
 
-    // add title
+  // add title
 
-    svg.append("text")
-      .attr("x", visWidth / 2)
-      .attr("y", 5)
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "hanging")
-      .attr("font-family", "sans-serif")
-      .attr("font-size", "16px")
-      .text(title);
+  const titleText = svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", 5)
+    .attr("text-anchor", "middle")
+    .attr("dominant-baseline", "hanging")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "16px")
+    .text(title);
 
-    // create scales
+  // create scales
 
-    x = d3.scaleLinear()
-      .domain([0.5, 10.5])
-      .range([margin.left, visWidth - margin.right]);
+  const x = d3.scaleLinear()
+    .domain([offset, numbars + offset])
+    .range([margin.left, width - margin.right]);
 
-    const y = d3.scaleLinear()
-      .domain([0,100])
-      .range([visHeight - margin.bottom, margin.top]);
-    
-    // create and add axes
+  const y = d3.scaleLinear()
+    .domain([0, 100])
+    .range([height - margin.bottom, margin.top]);
 
-    xAxis = d3.axisBottom(x).ticks(10);
+  // create and add axes
 
-    xAxisgroup = svg.append("g")
-      .attr("transform", `translate(0,${visHeight - margin.bottom})`)
-      .call(xAxis);
+  const xAxis = d3.axisBottom(x).ticks(numbars);
 
-    const yAxis = d3.axisLeft(y);
+  const xAxisgroup = svg.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(xAxis);
 
-    const yAxisgroup = svg.append("g")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(yAxis);
+  const yAxis = d3.axisLeft(y);
 
-    // draw bars
+  const yAxisgroup = svg.append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(yAxis);
+
+  // draw bars
+
+  let barwidth = x(1) - x(0) - 2;
+
+  const bars = barsgroup.selectAll("rect")
+    .data(data)
+    .join("rect")
+    .attr("x", d => x(d.index) - barwidth / 2)
+    .attr("y", d => y(d.rand))
+    .attr("width", barwidth)
+    .attr("height", d => y(0) - y(d.rand))
+    .attr("fill", d => d.index === numbars ? "red" : "steelblue");
+
+  function update(step, duration) {
+    x.domain([offset + step, numbars + offset + step]);
+    const t = d3.transition("transmove").duration(duration);
+    const t2 = d3.transition("transfill").duration(750);
+    bars.transition(t)
+      .attr("x", d => x(d.index) - barwidth / 2);
+    xAxisgroup.transition(t).call(xAxis);
+    bars.transition(t2).attr("fill", d => d.index === numbars + step ? "red" : "steelblue");
+  }
+
+  function resize(w, h) {
+    width = w;
+    height = h;
+
+    svg.attr("width", width)
+        .attr("height", height);
+
+    x.range([margin.left, width - margin.right]);
+    y.range([height - margin.bottom, margin.top]);
+
+    clipPath.attr("width", width - margin.left - margin.right)
+        .attr("height", height - margin.top - margin.bottom);
+
+    title.attr("x", width / 2);
 
     barwidth = x(1) - x(0) - 2;
 
-    bars = barsgroup.selectAll("rect")
-      .data(data)
-      .join("rect")
-        .attr("x", d => x(d.index) - barwidth/2)
+    bars.attr("x", d => x(d.index) - barwidth / 2)
         .attr("y", d => y(d.rand))
         .attr("width", barwidth)
         .attr("height", d => y(0) - y(d.rand))
-        .attr("fill", "steelblue");
 
+    xAxisgroup.call(xAxis);
+    yAxisgroup.call(yAxis);
   }
 
-  chart.update = function (step, duration) {
-    x.domain([0.5 + step, 10.5 + step]);
-    const t = d3.transition().duration(duration);
-    bars.transition(t)
-      .attr("x", d => x(d.index) - barwidth/2);
-    xAxisgroup.transition(t).call(xAxis);
-  }
+  Object.assign(svg.node(), {update, resize});
 
-  return chart;
+  return svg.node();
 }
