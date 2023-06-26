@@ -1,12 +1,12 @@
 // Load the datasets and call the functions to make the visualizations
 
 Promise.all([
-  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType),
-  d3.csv('data/NormalJumpDataset.csv', d3.autoType),
-  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType),
-  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType),
-  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType),
-  d3.csv('data/NormalSmallStepsDataset.csv', d3.autoType)
+  d3.csv('data/BasicNormal_Mean50_SD2_5_Set1.csv', d3.autoType),
+  d3.csv('data/JumpNormal_Mean50to70_SD2_5_Set6.csv', d3.autoType),
+  d3.csv('data/BasicNormal_Mean50_SD2_5_Set2.csv', d3.autoType),
+  d3.csv('data/BasicNormal_Mean50_SD2_5_Set3.csv', d3.autoType),
+  d3.csv('data/BasicNormal_Mean50_SD2_5_Set4.csv', d3.autoType),
+  d3.csv('data/BasicNormal_Mean50_SD2_5_Set5.csv', d3.autoType)
 ]).then((datasets) => {
 
   const numCols = 3;
@@ -24,7 +24,7 @@ Promise.all([
   let cellWidth = gridWidth/numCols;
   let cellHeight = gridHeight/numRows;
 
-  const titles = ["Small Steps", "Jump", "Empty", "Nothing", "Filler", "Etc."]
+  const titles = ["Machine 1", "Machine 2", "Machine 3", "Machine 4", "Machine 5", "Machine 6."]
   const charts = chartsContainer.selectAll("div")
     .data(d3.zip(datasets, titles))
     .join("div")
